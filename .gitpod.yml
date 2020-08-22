@@ -1,0 +1,9 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: yarn install && yarn run build
+
+vscode:
+  extensions:
+    - slevesque.shader@1.1.4:4s2fv0TMgR3h8guOtfuctg==

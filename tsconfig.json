@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "es2016",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "removeComments": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "preserveConstEnums": true,
+    "baseUrl": "//",
+    "paths": {
+      "https://unpkg.com/gl-matrix@3.3.0/esm/index.js": [
+        "./node_modules/gl-matrix/index.d.ts"
+      ]
+    }
+  }
+}
