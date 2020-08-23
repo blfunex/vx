@@ -8,17 +8,19 @@ import { terser as Terser } from "rollup-plugin-terser";
 import Package from "./package.json";
 import TSConfig from "./tsconfig.json";
 
+import { join } from "path";
+
 const external = Object.keys(Package.dependencies || {});
 
 export default [
   {
-    input: "source/client/main.ts",
+    input: join(__dirname, "source/client/main.ts"),
     external,
 
     output: {
-      file: "public/bundle.js",
+      file: join(__dirname, "public/bundle.js"),
       format: "esm",
-      sourcemap: true,
+      sourcemap: true
     },
 
     plugins: [
@@ -28,15 +30,15 @@ export default [
         compress: true,
         mangle: {
           properties: {
-            regex: /^[_A-Z]/,
-          },
+            regex: /^[_A-Z]/
+          }
         },
         ecma: 5,
         keep_classnames: process.env.NODE_ENV != "production",
         keep_fnames: false,
         safari10: false,
-        ie8: false,
-      }),
-    ],
-  },
+        ie8: false
+      })
+    ]
+  }
 ];

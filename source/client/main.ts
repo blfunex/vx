@@ -1,3 +1,9 @@
+import {
+  mat4,
+  vec3
+  // @ts-ignore
+} from "https://unpkg.com/gl-matrix@3.3.0/esm/index.js";
+
 import uplaodMeshToVAO from "./gl/uploadMeshToVAO";
 import createMeshVAO from "./gl/createMeshVAO";
 import combineMesh from "./mesh/combineMesh";
@@ -7,12 +13,13 @@ import createTex2D from "./gl/createTex2D";
 import parseOBJ from "./mesh/parseOBJ";
 import MeshData from "./mesh/MeshData";
 
-// @ts-ignore
-import { mat4, vec3 } from "https://unpkg.com/gl-matrix@3.3.0/esm/index.js";
+import debugVert from "./debug.vert";
+import debugFrag from "./debug.frag";
+import uploadTexture from "./gl/uploadTexture";
 
-function clamp(x: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, x));
-}
+import { fetchText, fetchImageBitmap } from "./core/fetch";
+import { clamp } from "./core/math/utils";
+import { createDebugCanvas } from "./core/utils";
 
 (async () => {
   const data = await fetchText("./assets/meshes/cube.obj");
@@ -24,7 +31,7 @@ function clamp(x: number, min: number, max: number) {
     // alpha: false,
     antialias: false,
     depth: true,
-    desynchronized: true,
+    desynchronized: true
   })!;
 
   gl.enable(gl.DEPTH_TEST);
@@ -58,15 +65,15 @@ function clamp(x: number, min: number, max: number) {
   const position = [0, 0, distance];
   const view = mat4.lookAt(mat4.create(), position, ORIGIN, UP);
 
-  display.onclick = (e) => {
+  display.onclick = e => {
     e.preventDefault();
     display.requestPointerLock();
   };
 
-  const ROTATION_LIMIT = (Math.PI / 2) - 0.001;
+  const ROTATION_LIMIT = Math.PI / 2 - 0.001;
 
   let movement = 0;
-  display.onmousemove = (e) => {
+  display.onmousemove = e => {
     if (document.pointerLockElement === display) {
       ry += e.movementX / 100;
       rx -= e.movementY / 100;
@@ -85,31 +92,40 @@ function clamp(x: number, min: number, max: number) {
 
   const ATLAS_SIZE = 128;
 
-  const canvas = createDebugAtlas(ATLAS_SIZE, ATLAS_SIZE);
+  const canvas = createDebugCanvas(ATLAS_SIZE, ATLAS_SIZE);
   const ctx = canvas.getContext("2d", {
-      desynchronized: true,
-      alpha: true
+    desynchronized: true,
+    alpha: true
   })!;
 
   let atlasOffsetX = 0;
   let atlasStartY = 0;
   let atlasEndY = 0;
 
-  const textures: Record<string, readonly [number, number, number, number]> = Object.create(null);
+  const textures: Record<
+    string,
+    readonly [number, number, number, number]
+  > = Object.create(null);
 
   await Promise.all([
-      loadTexture("top", "./assets/textures/blocks/crafting_table_top.png"),
-      loadTexture("side", "./assets/textures/blocks/crafting_table_side.png"),
-      loadTexture("front", "./assets/textures/blocks/crafting_table_front.png"),
-      loadTexture("bottom", "./assets/textures/blocks/oak_planks.png"),
+    loadTexture("top", "./assets/textures/blocks/crafting_table_top.png"),
+    loadTexture(
+      "side",
+      "./assets/textures/blocks/crafting_table_side.png"
+    ),
+    loadTexture(
+      "front",
+      "./assets/textures/blocks/crafting_table_front.png"
+    ),
+    loadTexture("bottom", "./assets/textures/blocks/oak_planks.png")
   ]);
 
   const mesh: MeshData = {
     vertices: [],
-    elements: [],
+    elements: []
   };
 
-  console.log(textures.top);
+  // console.log(textures.top);
 
   combineMesh(mesh, cube.south, ORIGIN, textures.front);
   combineMesh(mesh, cube.top, ORIGIN, textures.top);
@@ -128,9 +144,9 @@ function clamp(x: number, min: number, max: number) {
     if (movement > 0) {
       movement--;
       if (movement < 60) {
-          scale = (1 - (movement / 60)) ** 3;
+        scale = (1 - movement / 60) ** 3;
       } else {
-          scale = 0;
+        scale = 0;
       }
     }
     mat4.rotateY(model, model, -0.05 * scale);
@@ -145,20 +161,24 @@ function clamp(x: number, min: number, max: number) {
   })();
 
   async function loadTexture(name: string, source: string) {
-      textures[name] = await loadImage(source);
+    textures[name] = await loadImage(source);
   }
 
-  async function loadImage(source: string): Promise<readonly [number, number, number, number]> {
+  async function loadImage(
+    source: string
+  ): Promise<readonly [number, number, number, number]> {
     const image = await fetchImageBitmap(source);
-    const width = image.width, height = image.height;
-    let x = atlasOffsetX, y = atlasStartY;
+    const width = image.width,
+      height = image.height;
+    let x = atlasOffsetX,
+      y = atlasStartY;
     if (atlasOffsetX + width >= ATLAS_SIZE) {
-        y = atlasStartY = atlasEndY;
-        atlasEndY += height;
-        x = atlasOffsetX = 0;
+      y = atlasStartY = atlasEndY;
+      atlasEndY += height;
+      x = atlasOffsetX = 0;
     } else {
-        atlasOffsetX += width;
-        atlasEndY = Math.max(atlasEndY, y + height);
+      atlasOffsetX += width;
+      atlasEndY = Math.max(atlasEndY, y + height);
     }
     ctx.drawImage(image, x, y);
     uploadTexture(gl, atlas, canvas, atlasIndex);
@@ -169,32 +189,4 @@ function clamp(x: number, min: number, max: number) {
     const t = y / ATLAS_SIZE;
     return [s, t, w, h];
   }
-
 })();
-
-import debugVert from "./debug.vert";
-import debugFrag from "./debug.frag";
-import uploadTexture from "./gl/uploadTexture";
-
-function createOffscreenAtlas(width: number, height: number) {
-    return new OffscreenCanvas(width, height);
-}
-
-function createDebugAtlas(width: number, height: number) {
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    document.body.appendChild(canvas);
-    canvas.style.position = "fixed";
-    canvas.style.top = canvas.style.left = "0";
-    canvas.style.pointerEvents = "none";
-    return canvas as unknown as OffscreenCanvas;
-}
-
-async function fetchText(source: string) {
-  return (await fetch(source)).text();
-}
-
-async function fetchImageBitmap(source: string) {
-  return createImageBitmap(await (await fetch(source)).blob());
-}
