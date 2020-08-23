@@ -63,7 +63,7 @@ function clamp(x: number, min: number, max: number) {
     display.requestPointerLock();
   };
 
-  const ROTATION_LIMIT = Math.PI - 0.001;
+  const ROTATION_LIMIT = (Math.PI / 2) - 0.001;
 
   let movement = 0;
   display.onmousemove = (e) => {
@@ -76,7 +76,7 @@ function clamp(x: number, min: number, max: number) {
       vec3.rotateX(position, position, ORIGIN, rx);
       vec3.rotateY(position, position, ORIGIN, ry);
       mat4.lookAt(view, position, ORIGIN, UP);
-      movement = 60;
+      movement = 180;
     }
   };
 
@@ -124,12 +124,16 @@ function clamp(x: number, min: number, max: number) {
   gl.uniform1i(uAtlas, atlasIndex);
 
   (function frame() {
-    if (movement <= 0) {
-      mat4.rotateX(model, model, +0.02);
-      mat4.rotateY(model, model, -0.03);
-    } else {
+    let scale = 1;
+    if (movement > 0) {
       movement--;
+      if (movement < 60) {
+          scale = (1 - (movement / 60)) ** 3;
+      } else {
+          scale = 0;
+      }
     }
+    mat4.rotateY(model, model, -0.05 * scale);
     mat4.mul(transform, projection, view);
     mat4.mul(transform, transform, model);
 
