@@ -3,14 +3,14 @@ import MeshData from "./MeshData";
 export default function combineMesh(
   destination: MeshData,
   source: MeshData,
-  position?: [number, number, number],
-  texture?: [number, number, number, number]
+  position?: readonly [number, number, number],
+  texture?: readonly [number, number, number, number]
 ): MeshData;
 export default function combineMesh(
   destination: MeshData,
   source: MeshData,
-  [x, y, z] = [0, 0, 0],
-  [tx, ty, tw, th] = [0, 0, 1, 1]
+  [x, y, z] = [0, 0, 0] as readonly [number, number, number],
+  [tx, ty, tw, th] = [0, 0, 1, 1] as readonly [number, number, number, number]
 ) {
   const { elements, vertices } = destination;
   const start = (vertices.length / 8) | 0;
