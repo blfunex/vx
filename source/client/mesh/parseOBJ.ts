@@ -40,7 +40,7 @@ export default function parseOBJ(data: string): Record<string, MeshData> {
         );
         return;
       case "vt":
-        uvs.push(parseFloat(args[0]), parseFloat(args[1]));
+        uvs.push(1 - parseFloat(args[0]), 1 - parseFloat(args[1]));
         return;
       case "vn":
         normals.push(
