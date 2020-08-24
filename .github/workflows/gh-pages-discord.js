@@ -3,7 +3,7 @@ const https = require("https");
 // It is an eval because prettier keeps formating it to multiple lines. >:(
 const [, rng] = eval("Math.random().toFixed(7).split('.')");
 const url = `${process.env.PAGES_PUBLIC_URL}?${rng}`;
-const content = `Alpha offline singleplayer demo'ish 🤞 ${url}, might be broken !`;
+const content = `Alpha offline singleplayer demo'ish :fingers_crossed: ${url}, might be broken !`;
 
 const payload = JSON.stringify({
   content,
