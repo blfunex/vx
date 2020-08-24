@@ -16,10 +16,11 @@ import MeshData from "./mesh/MeshData";
 import debugVert from "./debug.vert";
 import debugFrag from "./debug.frag";
 import uploadTexture from "./gl/uploadTexture";
+import TextureAtlas from "./core/TextureAtlas";
+import Rect from "./core/math/Rect";
 
 import { fetchText, fetchImageBitmap } from "./core/fetch";
 import { clamp } from "./core/math/utils";
-import { createDebugCanvas } from "./core/utils";
 
 (async () => {
   console.clear();
@@ -91,44 +92,39 @@ import { createDebugCanvas } from "./core/utils";
     }
   };
 
-  const atlas = createTex2D(gl);
+  const atlasTexture = createTex2D(gl);
   const atlasIndex = 0;
-
-  const ATLAS_SIZE = 128;
-
-  const canvas = createDebugCanvas(ATLAS_SIZE, ATLAS_SIZE);
-  const ctx = canvas.getContext("2d", {
-    desynchronized: true,
-    alpha: true
-  })!;
-
-  let atlasOffsetX = 0;
-  let atlasStartY = 0;
-  let atlasEndY = 0;
-
-  const textures: Record<
-    string,
-    readonly [number, number, number, number]
-  > = Object.create(null);
-
-  await Promise.all([
-    loadTexture("top", "./assets/textures/blocks/crafting_table_top.png"),
-    loadTexture("side", "./assets/textures/blocks/crafting_table_side.png"),
-    loadTexture("front", "./assets/textures/blocks/crafting_table_front.png"),
-    loadTexture("bottom", "./assets/textures/blocks/oak_planks.png")
-  ]);
 
   const mesh: MeshData = {
     vertices: [],
     elements: []
   };
 
-  combineMesh(mesh, cube.south, ORIGIN, textures.front);
-  combineMesh(mesh, cube.top, ORIGIN, textures.top);
-  combineMesh(mesh, cube.east, ORIGIN, textures.side);
-  combineMesh(mesh, cube.bottom, ORIGIN, textures.bottom);
-  combineMesh(mesh, cube.north, ORIGIN, textures.front);
-  combineMesh(mesh, cube.west, ORIGIN, textures.side);
+  const atlas = new TextureAtlas(128);
+
+  const bitmaps = await Promise.all([
+    fetchImageBitmap("./assets/textures/blocks/crafting_table_top.png"),
+    fetchImageBitmap("./assets/textures/blocks/crafting_table_side.png"),
+    fetchImageBitmap("./assets/textures/blocks/crafting_table_front.png"),
+    fetchImageBitmap("./assets/textures/blocks/oak_planks.png")
+  ]);
+
+  const rects = atlas.add(bitmaps);
+
+  for (const bmp of bitmaps) bmp.close();
+
+  uploadTexture(gl, atlasTexture, atlas.source);
+
+  combineMesh(mesh, cube.top, ORIGIN, rects[0]);
+  combineMesh(mesh, cube.east, ORIGIN, rects[1]);
+  combineMesh(mesh, cube.west, ORIGIN, rects[1]);
+  combineMesh(mesh, cube.south, ORIGIN, rects[2]);
+  combineMesh(mesh, cube.north, ORIGIN, rects[2]);
+  combineMesh(mesh, cube.bottom, ORIGIN, rects[3]);
+
+  for (const rect of rects) Rect.pool.release(rect);
+
+  console.log(Rect.pool.released);
 
   const vao = createMeshVAO(gl);
   uplaodMeshToVAO(gl, vao, mesh);
@@ -157,36 +153,6 @@ import { createDebugCanvas } from "./core/utils";
 
     requestAnimationFrame(frame);
   })();
-
-  async function loadTexture(name: string, source: string) {
-    textures[name] = await loadImage(source);
-  }
-
-  async function loadImage(
-    source: string
-  ): Promise<readonly [number, number, number, number]> {
-    const image = await fetchImageBitmap(source);
-    const width = image.width,
-      height = image.height;
-    let x = atlasOffsetX,
-      y = atlasStartY;
-    if (atlasOffsetX + width >= ATLAS_SIZE) {
-      y = atlasStartY = atlasEndY;
-      atlasEndY += height;
-      x = atlasOffsetX = 0;
-    } else {
-      atlasOffsetX += width;
-      atlasEndY = Math.max(atlasEndY, y + height);
-    }
-    ctx.drawImage(image, x, y);
-    uploadTexture(gl, atlas, canvas, atlasIndex);
-    image.close();
-    const w = width / ATLAS_SIZE;
-    const h = height / ATLAS_SIZE;
-    const s = x / ATLAS_SIZE;
-    const t = y / ATLAS_SIZE;
-    return [s, t, w, h];
-  }
 })();
 
 function createWebGLContext(

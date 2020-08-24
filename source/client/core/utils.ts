@@ -4,6 +4,7 @@ document.body.appendChild(debug);
 
 Object.assign(debug.style, {
   position: "fixed",
+  opacity: 0.25,
   pointerEvents: "none",
   top: "0",
   left: "0"
