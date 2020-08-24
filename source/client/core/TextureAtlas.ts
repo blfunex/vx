@@ -6,33 +6,35 @@ export default class TextureAtlas {
   private _canvas: OffscreenCanvas;
   private _context: OffscreenCanvasRenderingContext2D;
 
-  constructor(size: number) {
+  public constructor(size: number) {
     this._size = size;
     this._canvas = createDebugCanvas(size, size);
-    this._context = this._canvas.getContext("2d", { desynchronized: false })!;
+    this._context = this._canvas.getContext("2d", {
+      desynchronized: false
+    })!;
     this._insertImage = this._insertImage.bind(this);
     this._spaces = [Rect.pool.get(0, 0, size, size)];
 
-    const ctx = this._context;
-    const count = 8;
-    const length = size / count;
-    ctx.beginPath();
-    for (let i = 1; i < count; i++) {
-      const offset = i * length;
-      ctx.moveTo(offset, 0);
-      ctx.lineTo(offset, size);
-      ctx.moveTo(0, offset);
-      ctx.lineTo(size, offset);
-    }
-    ctx.strokeStyle = "white";
-    ctx.stroke();
-    const area = count * count;
-    ctx.fillStyle = "lime";
-    for (let i = 0; i < area; i++) {
-      const x = i % count;
-      const y = (i / count) | 0;
-      ctx.fillText(String(i), x * length, (y + 1) * length);
-    }
+    // const ctx = this._context;
+    // const count = 8;
+    // const length = size / count;
+    // ctx.beginPath();
+    // for (let i = 1; i < count; i++) {
+    //   const offset = i * length;
+    //   ctx.moveTo(offset, 0);
+    //   ctx.lineTo(offset, size);
+    //   ctx.moveTo(0, offset);
+    //   ctx.lineTo(size, offset);
+    // }
+    // ctx.strokeStyle = "white";
+    // ctx.stroke();
+    // const area = count * count;
+    // ctx.fillStyle = "lime";
+    // for (let i = 0; i < area; i++) {
+    //   const x = i % count;
+    //   const y = (i / count) | 0;
+    //   ctx.fillText(String(i), x * length, (y + 1) * length);
+    // }
   }
 
   private _spaces: Rect[];
@@ -68,14 +70,11 @@ export default class TextureAtlas {
     throw "Failed to place image in atlas.";
   }
 
-  add(images: CanvasImageSource[]) {
-    return images.map(this._insertImage).map(x => {
-      console.log(x);
-      return x;
-    });
+  public add(images: CanvasImageSource[]) {
+    return images.map(this._insertImage);
   }
 
-  get source(): TexImageSource {
+  public get source(): TexImageSource {
     return this._canvas;
   }
 }
