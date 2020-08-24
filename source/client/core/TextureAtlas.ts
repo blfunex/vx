@@ -77,4 +77,8 @@ export default class TextureAtlas {
   public get source(): TexImageSource {
     return this._canvas;
   }
+
+  public dispose() {
+    for (const rect of this._spaces) rect.dispose();
+  }
 }

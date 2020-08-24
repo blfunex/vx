@@ -20,5 +20,9 @@ export default class Rect {
     return new Rect(x, y, width, height);
   }
 
+  public dispose() {
+    Rect.pool.release(this);
+  }
+
   public static readonly pool = new ObjectPool(Rect);
 }

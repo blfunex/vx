@@ -124,8 +124,6 @@ import { clamp } from "./core/math/utils";
 
   for (const rect of rects) Rect.pool.release(rect);
 
-  console.log(Rect.pool.released);
-
   const vao = createMeshVAO(gl);
   uplaodMeshToVAO(gl, vao, mesh);
 
