@@ -34,6 +34,6 @@ jobs:
       - name: Publish for Discord 👥
         env:
           PAGES_PUBLIC_URL: https://blfunex.github.io/vx/
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_DEMO_WEBHOOK: ${{ secrets.DISCORD_DEMO_WEBHOOK }}
         run: |
           node ".github/workflows/gh-pages-discord.js"

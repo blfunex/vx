@@ -7,9 +7,9 @@ const content = `Alpha offline singleplayer demo'ish :fingers_crossed: ${url}, m
 
 const payload = JSON.stringify({
   content,
-  username: "Butter Bot",
+  username: "blfunex",
   avatar_url:
-    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatici.behindthevoiceactors.com%2Fbehindthevoiceactors%2F_img%2Fchars%2Fthumbs%2Fbutter-bot-rick-and-morty-65.7_thumb.jpg&f=1&nofb=1"
+    "https://avatars3.githubusercontent.com/u/11468624?s=460&u=e53e30356e49369510a3bdab9edf8f64ed81f971&v=4"
 });
 
 const options = {
@@ -22,7 +22,7 @@ const options = {
 
 console.log(options, payload);
 
-const req = https.request(process.env.DISCORD_WEBHOOK, options, res => {
+const req = https.request(process.env.DISCORD_DEMO_WEBHOOK, options, res => {
   console.log(`Webhook status: ${res.statusCode}`);
   res.on("data", data => {
     process.stdout.write(data);
