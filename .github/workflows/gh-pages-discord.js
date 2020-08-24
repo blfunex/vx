@@ -7,9 +7,9 @@ const content = `Alpha offline singleplayer demo'ish 🤞 ${url}, might be broke
 
 const payload = JSON.stringify({
   content,
-  username: "Umph's Janky Bot",
+  username: "Butter Bot",
   avatar_url:
-    "https://a.thumbs.redditmedia.com/JZ45VzdaAhKYaIFzOXH8AZUFHsxZnexpY4seH_3xwY0.png"
+    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatici.behindthevoiceactors.com%2Fbehindthevoiceactors%2F_img%2Fchars%2Fthumbs%2Fbutter-bot-rick-and-morty-65.7_thumb.jpg&f=1&nofb=1"
 });
 
 const options = {
