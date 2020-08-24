@@ -196,6 +196,7 @@ function createWebGLContext(
   const gl = (canvas.getContext("webgl2", attributes) ||
     canvas.getContext("experimental-webgl2", attributes)) as WebGL2RenderingContext;
   if (gl === null) return patchLegacyWebGL(canvas, attributes);
+  console.info("Using WebGL 2");
   return gl;
 }
 
@@ -206,6 +207,9 @@ function patchLegacyWebGL(
   const gl = (canvas.getContext("webgl", attributes) ||
     canvas.getContext("experimental-webgl", attributes)) as WebGL2RenderingContext;
   if (gl === null) throw new Error("Failed to create GL context");
+
+  console.info("Using a patched WebGL 1");
+
   const patch = gl as WebGL2RenderingContext;
 
   const vao = gl.getExtension("OES_vertex_array_object");
