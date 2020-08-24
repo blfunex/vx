@@ -1,6 +1,7 @@
 const https = require("https");
 
-const [, rng] = Math.random().split(".");
+// It is an eval because prettier keeps formating it to multiple lines. >:(
+const [, rng] = eval("Math.random().toFixed(7).split('.')");
 const url = `${process.env.PAGES_PUBLIC_URL}?${rng}`;
 const content = `Project is still in alpha,
 but you can test a singleplayer version of it here ${url}`;
