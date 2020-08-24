@@ -1,15 +1,12 @@
 const https = require("https");
 
-const rng = Math.random()
-  .toFixed(7)
-  .split(".")[1];
+const [, rng] = Math.random().split(".");
+const url = `${process.env.PAGES_PUBLIC_URL}?${rng}`;
+const content = `Project is still in alpha,
+but you can test a singleplayer version of it here ${url}`;
 
-const message = JSON.stringify({
-  content:
-    "This is a demo build of my prototype, use the following link if the the automated one is outdated " +
-    process.env.PAGES_PUBLIC_URL +
-    "?" +
-    rng,
+const payload = JSON.stringify({
+  content,
   username: "Umph's Janky Bot",
   avatar_url:
     "https://a.thumbs.redditmedia.com/JZ45VzdaAhKYaIFzOXH8AZUFHsxZnexpY4seH_3xwY0.png"
@@ -19,11 +16,11 @@ const options = {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "Content-Length": message.length
+    "Content-Length": payload.length
   }
 };
 
-console.log(options, message);
+console.log(options, payload);
 
 const req = https.request(process.env.DISCORD_WEBHOOK, options, res => {
   console.log(`Webhook status: ${res.statusCode}`);
@@ -36,5 +33,5 @@ req.on("error", error => {
   console.error(error);
 });
 
-req.write(message);
+req.write(payload);
 req.end();

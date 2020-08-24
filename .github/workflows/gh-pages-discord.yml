@@ -1,11 +1,5 @@
 name: Discord GH Page Message
-on:
-  deployment:
-    branches:
-      - "gh-pages"
-  deployment_status:
-    branches:
-      - "gh-pages"
+on: page_build
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
