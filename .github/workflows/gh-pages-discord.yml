@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Discord GH Page Message
 on:
   deployment:
     branches:
