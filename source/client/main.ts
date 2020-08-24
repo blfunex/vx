@@ -37,6 +37,8 @@ import { createDebugCanvas } from "./core/utils";
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.CULL_FACE);
 
+  gl.clearColor(0, 0.5, 1, 1);
+
   const shader = createShader(gl, debugVert, debugFrag);
 
   gl.useProgram(shader);
@@ -109,14 +111,8 @@ import { createDebugCanvas } from "./core/utils";
 
   await Promise.all([
     loadTexture("top", "./assets/textures/blocks/crafting_table_top.png"),
-    loadTexture(
-      "side",
-      "./assets/textures/blocks/crafting_table_side.png"
-    ),
-    loadTexture(
-      "front",
-      "./assets/textures/blocks/crafting_table_front.png"
-    ),
+    loadTexture("side", "./assets/textures/blocks/crafting_table_side.png"),
+    loadTexture("front", "./assets/textures/blocks/crafting_table_front.png"),
     loadTexture("bottom", "./assets/textures/blocks/oak_planks.png")
   ]);
 
@@ -154,6 +150,8 @@ import { createDebugCanvas } from "./core/utils";
     mat4.mul(transform, transform, model);
 
     gl.uniformMatrix4fv(uTransform, false, transform);
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     drawMeshVAO(gl, vao, mesh.elements.length);
 
