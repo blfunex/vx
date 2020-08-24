@@ -3,6 +3,11 @@ on:
   push:
     branches:
       - "develop"
+      - "feature/*"
+      - "fix/*"
+      - "hotfix/*"
+      - "staging/*"
+      - "master/*"
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -26,7 +31,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
           FOLDER: public
-      - name: Publish To Discord 👥
+      - name: Publish for Discord 👥
         env:
           PAGES_PUBLIC_URL: https://blfunex.github.io/vx/
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
