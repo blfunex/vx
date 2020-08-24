@@ -3,7 +3,17 @@ const https = require("https");
 // It is an eval because prettier keeps formating it to multiple lines. >:(
 const [, rng] = eval("Math.random().toFixed(7).split('.')");
 const url = `${process.env.PAGES_PUBLIC_URL}?${rng}`;
-const content = `Alpha offline singleplayer demo'ish :fingers_crossed: ${url}, might be broken !`;
+
+const templates = [
+  () => `Hope this works :fingers_crossed:. ${url}`,
+  () => `Prepare for a browser tab crash :desktop::fire:. ${url}`,
+  () => `free hosting is provided by GitHub Pages. ${url} :bank::money_with_wings:`,
+  () => `Demo time ! ${url} :joystick:`,
+  () => `I hope that I finish this soon so I can play ${url} :video_game:`,
+  () => `:bee: Do you like jazz ? ${url}`
+];
+
+const content = templates[(Math.random() * templates.length) | 0]();
 
 const payload = JSON.stringify({
   content,
