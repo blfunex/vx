@@ -12,8 +12,6 @@ import { join } from "path";
 
 const external = Object.keys(Package.dependencies || {});
 
-console.log(process.env);
-
 const DEBUG =
   process.env.NODE_ENV !== "production" &&
   (process.env.DEBUG === undefined ||
