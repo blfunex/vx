@@ -22,17 +22,19 @@ import { clamp } from "./core/math/utils";
 import { createDebugCanvas } from "./core/utils";
 
 (async () => {
+  console.clear();
+
   const data = await fetchText("./assets/meshes/cube.obj");
   const cube = parseOBJ(data);
 
   const display = document.querySelector("canvas")!;
 
-  const gl = display.getContext("webgl2", {
+  const gl = createWebGLContext(display, {
     // alpha: false,
     antialias: false,
     depth: true,
     desynchronized: true
-  })!;
+  });
 
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.CULL_FACE);
@@ -121,8 +123,6 @@ import { createDebugCanvas } from "./core/utils";
     elements: []
   };
 
-  // console.log(textures.top);
-
   combineMesh(mesh, cube.south, ORIGIN, textures.front);
   combineMesh(mesh, cube.top, ORIGIN, textures.top);
   combineMesh(mesh, cube.east, ORIGIN, textures.side);
@@ -188,3 +188,234 @@ import { createDebugCanvas } from "./core/utils";
     return [s, t, w, h];
   }
 })();
+
+function createWebGLContext(
+  canvas: HTMLCanvasElement,
+  attributes: WebGLContextAttributes
+) {
+  const gl = (canvas.getContext("webgl2", attributes) ||
+    canvas.getContext("experimental-webgl2", attributes)) as WebGL2RenderingContext;
+  if (gl === null) return patchLegacyWebGL(canvas, attributes);
+  return gl;
+}
+
+function patchLegacyWebGL(
+  canvas: HTMLCanvasElement,
+  attributes: WebGLContextAttributes
+) {
+  const gl = (canvas.getContext("webgl", attributes) ||
+    canvas.getContext("experimental-webgl", attributes)) as WebGL2RenderingContext;
+  if (gl === null) throw new Error("Failed to create GL context");
+  const patch = gl as WebGL2RenderingContext;
+
+  const vao = gl.getExtension("OES_vertex_array_object");
+
+  if (vao === null) throw "Failed to load extension OES_vertex_array_object";
+
+  patch.createVertexArray = vao.createVertexArrayOES.bind(vao);
+  patch.isVertexArray = vao.isVertexArrayOES.bind(vao);
+  patch.bindVertexArray = vao.bindVertexArrayOES.bind(vao);
+  patch.deleteVertexArray = vao.deleteVertexArrayOES.bind(vao);
+  // @ts-ignore
+  patch.VERTEX_ARRAY_BINDING = vao.VERTEX_ARRAY_BINDING_OES;
+
+  const glCreateShader = gl.createShader.bind(gl);
+
+  patch.createShader = type => {
+    const shader = glCreateShader(type);
+    if (shader === null) return null;
+    (shader as PatchedWebGLShader).type = type;
+    return shader;
+  };
+
+  patch.shaderSource = patchLegacyWebGLShaderSource(gl);
+
+  return patch;
+
+  type PatchedWebGLShader = { type: number };
+
+  function patchLegacyWebGLShaderSource(gl: WebGLRenderingContext) {
+    const glShaderSource = gl.shaderSource.bind(gl);
+
+    const rxIOStatement = /^(?:layout\([^)]*location\s*=\s*(\d+)\))?[ \t\r]*(out|in)\s+(vec[234])\s+([a-zA-Z][_a-zA-Z0-9]+);/gm;
+    const rxShaderPrecision = /precision\s+[a-z]+\s+[a-zA-Z][_a-zA-Z0-9]+;/;
+    const rxUniformSampler = /^uniform sampler(2D|Array|Cube|3D) ([a-zA-Z][_a-zA-Z0-9]+);/gm;
+
+    function findShaderIO(source: string, onMatch: (...args: string[]) => void) {
+      return source.replace(rxIOStatement, (_, ...data) => {
+        data.splice(-2);
+        onMatch.apply(null, data);
+        return "";
+      });
+    }
+
+    function getIndex<T>(list: T[], hint?: string) {
+      if (hint === undefined) {
+        const count = list.length;
+        let index = 0;
+        while (index < count) {
+          if (list[index] === undefined) break;
+          else index += 1;
+        }
+        return index;
+      }
+      return parseInt(hint, 10);
+    }
+
+    type IOLists<T> = Record<string, T[]>;
+    type IOTemplates<T> = Record<string, (type: string, name: string) => T>;
+    type IOReducers<T> = Record<string, (list: T[]) => string>;
+
+    function patchShader<T>(
+      source: string,
+      templates: IOTemplates<T>,
+      reducers: IOReducers<T>
+    ) {
+      const lists: IOLists<T> = {
+        in: [],
+        out: []
+      };
+      source = findShaderIO(source, (hint, dir, type, name) => {
+        const list = lists[dir];
+        const index = getIndex(list, hint);
+        list[index] = templates[dir](type, name);
+      });
+      return reducers.in(lists.in) + reducers.out(lists.out) + source;
+    }
+
+    const vertTemplates: IOTemplates<string> = {
+      in(type, name) {
+        return `attribute ${type} ${name};`;
+      },
+      out(type, name) {
+        return `varying ${type} ${name};`;
+      }
+    };
+
+    const vertReducers: IOReducers<string> = {
+      in(list) {
+        return list.join("");
+      },
+      out(list) {
+        return list.join("");
+      }
+    };
+
+    let gl_FragColor: RegExp | undefined;
+    const gl_FragData: RegExp[] = [];
+
+    const rxIDCache = Object.create(null);
+    function createRxID(id: string) {
+      return rxIDCache[id] || (rxIDCache[id] = new RegExp(`\\b${id}\\b`, "g"));
+    }
+
+    const rxTextureCache = Object.create(null);
+    function createRxTexture(id: string) {
+      return (
+        rxIDCache[id] ||
+        (rxIDCache[id] = new RegExp(`texture\\(\s*\\b${id}\\b`, "g"))
+      );
+    }
+
+    const fragTemplates: IOTemplates<string> = {
+      in(type, name) {
+        return `varying ${type} ${name};` as string;
+      },
+      out(_, name) {
+        return name;
+      }
+    };
+
+    const fragReducers: IOReducers<string> = {
+      in(list: string[]) {
+        return list.join("");
+      },
+      out(list: string[]) {
+        if (list.length === 1) {
+          gl_FragColor = createRxID(list[0]);
+        } else {
+          gl_FragData.push.apply(gl_FragData, list.map(createRxID));
+        }
+        return "";
+      }
+    };
+
+    function patchVert(source: string) {
+      return patchShader(source, vertTemplates, vertReducers);
+    }
+
+    function patchFrag(source: string) {
+      gl_FragColor = undefined;
+      gl_FragData.length = 0;
+      const precisions: string[] = [];
+      source = source.replace(rxShaderPrecision, precision => {
+        precisions.push(precision);
+        return "";
+      });
+      const uniforms: Record<string, string> = {};
+      source.replace(rxUniformSampler, (_, type, name): any => {
+        uniforms[name] = type;
+      });
+      for (const sampler in uniforms) {
+        source = source.replace(
+          createRxTexture(sampler),
+          `texture${uniforms[sampler]}(${sampler}`
+        );
+      }
+      source = patchShader(source, fragTemplates, fragReducers);
+      source = precisions.join("") + source;
+      if (gl_FragColor !== undefined) {
+        source = source.replace(gl_FragColor, "gl_FragColor");
+      } else {
+        gl_FragData.forEach((rx, index) => {
+          source = source.replace(rx, `gl_FragData[${index}]`);
+        });
+      }
+      return source;
+    }
+
+    // https://github.com/vwochnik/rollup-plugin-glsl/blob/master/index.js#L4
+    function compressShader(source: string) {
+      let needNewline = false;
+      return source
+        .replace(
+          /\\(?:\r\n|\n\r|\n|\r)|\/\*.*?\*\/|\/\/(?:\\(?:\r\n|\n\r|\n|\r)|[^\n\r])*/g,
+          ""
+        )
+        .split(/\n+/)
+        .reduce((result, line) => {
+          line = line.trim().replace(/\s{2,}|\t/, " ");
+          if (line[0] === "#") {
+            if (needNewline) {
+              result.push("\n");
+            }
+
+            result.push(line, "\n");
+            needNewline = false;
+          } else {
+            result.push(
+              line.replace(
+                /\s*({|}|=|\*|,|\+|\/|>|<|&|\||\[|\]|\(|\)|\-|!|;)\s*/g,
+                "$1"
+              )
+            );
+            needNewline = true;
+          }
+          return result;
+        }, [] as string[])
+        .join("")
+        .replace(/\n+/g, "\n");
+    }
+
+    return (shader: PatchedWebGLShader, source: string) => {
+      source = source.replace(/#version 300 es/, "");
+      if (shader.type === gl.VERTEX_SHADER) {
+        source = patchVert(source);
+      } else {
+        source = patchFrag(source);
+      }
+      source = compressShader(source);
+      return glShaderSource(shader, source);
+    };
+  }
+}

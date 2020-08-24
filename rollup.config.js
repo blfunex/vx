@@ -30,7 +30,10 @@ export default [
     },
 
     plugins: [
-      GLSL({ include: "**/*.(frag|vert|fs|vs|glsl)" }),
+      GLSL({
+        include: "**/*.(frag|vert|fs|vs|glsl)",
+        compress: false
+      }),
       TypeScript(TSConfig.compilerOptions),
       Terser({
         compress: true,
