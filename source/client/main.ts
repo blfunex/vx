@@ -316,8 +316,8 @@ function patchLegacyWebGL(
     const rxTextureCache = Object.create(null);
     function createRxTexture(id: string) {
       return (
-        rxIDCache[id] ||
-        (rxIDCache[id] = new RegExp(`texture\\(\s*\\b${id}\\b`, "g"))
+        rxTextureCache[id] ||
+        (rxTextureCache[id] = new RegExp(`texture\\(\s*\\b${id}\\b`, "g"))
       );
     }
 
