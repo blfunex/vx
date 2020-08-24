@@ -15,11 +15,11 @@ jobs:
         with:
           persist-credentials: false
       - name: Install and Build 🔧
-        env:
-          NODE_ENV: production
         run: |
           npm install
           npm run build
+        env:
+          DEBUG: false
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@3.5.9
         with:
