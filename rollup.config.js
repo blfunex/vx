@@ -20,7 +20,7 @@ export default [
     output: {
       file: join(__dirname, "public/bundle.js"),
       format: "esm",
-      sourcemap: true
+      sourcemap: process.env.NODE_ENV != "production"
     },
 
     plugins: [
