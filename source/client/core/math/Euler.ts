@@ -1,27 +1,68 @@
 import ObjectPool from "../ObjectPool";
-
-export const enum EulerOrder {}
+import Vector3 from "./Vector3";
+import { noop } from "../utils";
 
 export default class Euler {
-  public constructor(
-    public pitch: number,
-    public yaw: number,
-    public roll: number
-  ) {}
+  public update = noop;
+
+  private _pitch: number;
+  private _yaw: number;
+  private _roll: number;
+
+  public get pitch() {
+    return this._pitch;
+  }
+  public set pitch(value) {
+    this._pitch = value;
+    this.update();
+  }
+
+  public get yaw() {
+    return this._yaw;
+  }
+  public set yaw(value) {
+    this._yaw = value;
+    this.update();
+  }
+
+  public get roll() {
+    return this._roll;
+  }
+  public set roll(value) {
+    this._roll = value;
+    this.update();
+  }
+
+  public constructor(pitch: number, yaw: number, roll: number) {
+    this._pitch = pitch;
+    this._yaw = yaw;
+    this._roll = roll;
+  }
 
   public set(pitch: number, yaw: number, roll: number) {
-    this.pitch = pitch;
-    this.yaw = yaw;
-    this.roll = roll;
+    this._pitch = pitch;
+    this._yaw = yaw;
+    this._roll = roll;
     return this;
   }
 
-  public assign(euler: Euler) {
-    return this.set(euler.pitch, euler.yaw, euler.roll);
+  public is(euler: Euler) {
+    return this.set(euler._pitch, euler._yaw, euler._roll);
   }
 
   public clone() {
-    return Euler.pool.get(this.pitch, this.yaw, this.roll);
+    return Euler.pool.get(this._pitch, this._yaw, this._roll);
+  }
+
+  public get forward() {
+    return this.calculateForward(Vector3.pool.getTransient(0, 0, 0));
+  }
+
+  public calculateForward(out: Vector3) {
+    out.x = Math.cos(this._yaw) * Math.cos(this._pitch);
+    out.y = Math.sin(this._yaw) * Math.cos(this._pitch);
+    out.z = Math.sin(this._pitch);
+    return out;
   }
 
   public static create(pitch: number, yaw: number, roll: number) {

@@ -20,10 +20,12 @@ export default class ObjectPool<T extends ObjectPoolObject<U>, U extends any[]> 
   }
 
   /**
-   * Do **not** borrow if you are calling a depandancy, or futher code in your stack level that will use the same object pool.
+   * - **Best use case**: you need a single value from the pool, you don't plan on calling a further depandancy that will use the same pool, and you don't intend on returning the value.
+   * - **Document** that the value is borrowed and might change if leaking down the call stack _(e.i. returning the value)_.
+   * - **Use `get` instead** if the you plan on leaking the further up the call stack _(e.i. a depandancy that might use the same pool)_.
    */
-  public borrow(...args: U): T;
-  public borrow() {
+  public getTransient(...args: U): T;
+  public getTransient() {
     const rect = this.get.apply(this, (arguments as unknown) as U);
     this.release(rect);
     return rect;

@@ -18,6 +18,32 @@ const DEBUG =
     process.env.DEBUG === "true" ||
     process.env.DEBUG === "");
 
+const plugins = [
+  GLSL({
+    include: "**/*.(frag|vert|fs|vs|glsl)",
+    compress: !DEBUG
+  }),
+  TypeScript(TSConfig.compilerOptions)
+];
+
+if (!DEBUG) {
+  plugins.push(
+    Terser({
+      compress: true,
+      mangle: {
+        properties: {
+          regex: /^[_A-Z]/
+        }
+      },
+      ecma: 5,
+      keep_classnames: DEBUG,
+      keep_fnames: false,
+      safari10: false,
+      ie8: false
+    })
+  );
+}
+
 export default [
   {
     input: join(__dirname, "source/client/main.ts"),
@@ -29,25 +55,6 @@ export default [
       sourcemap: DEBUG
     },
 
-    plugins: [
-      GLSL({
-        include: "**/*.(frag|vert|fs|vs|glsl)",
-        compress: false
-      }),
-      TypeScript(TSConfig.compilerOptions),
-      Terser({
-        compress: true,
-        mangle: {
-          properties: {
-            regex: /^[_A-Z]/
-          }
-        },
-        ecma: 5,
-        keep_classnames: DEBUG,
-        keep_fnames: false,
-        safari10: false,
-        ie8: false
-      })
-    ]
+    plugins
   }
 ];

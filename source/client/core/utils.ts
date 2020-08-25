@@ -1,3 +1,5 @@
+export function noop() {}
+
 const debug = document.createElement("div");
 
 document.body.appendChild(debug);

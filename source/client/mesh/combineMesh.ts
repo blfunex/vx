@@ -11,7 +11,7 @@ export default function combineMesh(
   destination: MeshData,
   source: MeshData,
   [x, y, z] = [0, 0, 0] as readonly [number, number, number],
-  texture = Rect.pool.borrow(0, 0, 1, 1)
+  texture = Rect.pool.getTransient(0, 0, 1, 1)
 ) {
   const { elements, vertices } = destination;
   const start = (vertices.length / 8) | 0;

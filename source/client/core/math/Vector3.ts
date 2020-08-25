@@ -1,7 +1,9 @@
 import ObjectPool from "../ObjectPool";
 
 export default class Vector3 {
-  constructor(public x: number, public y: number, public z: number) {}
+  public static readonly UP: Readonly<Vector3> = new Vector3(0, 1, 0);
+
+  public constructor(public x: number, public y: number, public z: number) {}
 
   public set(x: number, y: number, z: number) {
     this.x = x;
@@ -10,8 +12,21 @@ export default class Vector3 {
     return this;
   }
 
-  public assign(vector: Vector3) {
+  public is(vector: Readonly<Vector3>) {
     return this.set(vector.x, vector.y, vector.z);
+  }
+
+  public isCross(a: Readonly<Vector3>, b: Readonly<Vector3>) {
+    const ax = a.x;
+    const ay = a.y;
+    const az = a.z;
+    const bx = b.x;
+    const by = b.y;
+    const bz = b.z;
+    this.x = ay * bz - az * by;
+    this.y = az * bx - az * bz;
+    this.z = ax * by - ay * bx;
+    return this;
   }
 
   public clone() {
